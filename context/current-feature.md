@@ -20,4 +20,5 @@ Not Started
 
 <!-- Keep this updated. Earliest to latest -->
 
-- Project setup and boilerplate cleanup
+- **Initial Next.js project setup** with Create Next App, TypeScript, and Tailwind CSS v4
+- Boilerplate cleanup (Removed default SVGs and placeholder content)
