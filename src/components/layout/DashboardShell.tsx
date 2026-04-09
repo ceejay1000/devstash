@@ -4,19 +4,29 @@ import { useState, useEffect } from 'react';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 
+const isDesktop = () => window.innerWidth >= 1024;
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  // Start closed; open automatically on desktop after mount
+  // Starts false on both server and client — no hydration mismatch.
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    setSidebarOpen(mq.matches);
+    // rAF makes this a callback, not a direct synchronous setState in the effect body.
+    const rafId = requestAnimationFrame(() => setSidebarOpen(isDesktop()));
 
-    const handler = (e: MediaQueryListEvent) => {
-      if (e.matches) setSidebarOpen(true);
+    const onResize = () => { if (isDesktop()) setSidebarOpen(true); };
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setSidebarOpen(isDesktop());
     };
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
+
+    window.addEventListener('resize', onResize);
+    window.addEventListener('pageshow', onPageShow);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('pageshow', onPageShow);
+    };
   }, []);
 
   return (
