@@ -1,3 +1,20 @@
+import { StatsCards } from '@/components/dashboard/StatsCards';
+import { RecentCollections } from '@/components/dashboard/RecentCollections';
+import { PinnedItems } from '@/components/dashboard/PinnedItems';
+import { RecentItems } from '@/components/dashboard/RecentItems';
+
 export default function DashboardPage() {
-  return <h2 className="text-sm font-medium text-muted-foreground">Main</h2>;
+  return (
+    <div className="space-y-6 max-w-5xl mx-auto">
+      <div>
+        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">Your developer knowledge hub</p>
+      </div>
+
+      <StatsCards />
+      <RecentCollections />
+      <PinnedItems />
+      <RecentItems />
+    </div>
+  );
 }
