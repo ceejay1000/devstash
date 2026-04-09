@@ -22,3 +22,4 @@ Not Started
 
 - **Initial Next.js project setup** with Create Next App, TypeScript, and Tailwind CSS v4
 - Boilerplate cleanup (Removed default SVGs and placeholder content)
+- **Dashboard UI Phase 1** — ShadCN initialized, `/dashboard` route with dark mode, top bar with search and new item button, placeholder sidebar and main areas
