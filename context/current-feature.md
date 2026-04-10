@@ -6,15 +6,29 @@
 
 <!-- Not Started|In Progress|Completed -->
 
-Completed
+In Progress
 
 ## Goals
 
 <!-- Goals & requirements -->
 
+Populate the database with sample data for development and demos:
+
+- **Demo user** — `demo@devstash.io`, password `12345678` (bcryptjs, 12 rounds), `isPro: false`
+- **System item types** — 7 types (snippet, prompt, command, note, file, image, link)
+- **Collections & items:**
+  - React Patterns — 3 TypeScript snippets (hooks, component patterns, utilities)
+  - AI Workflows — 3 prompts (code review, docs generation, refactoring)
+  - DevOps — 1 snippet, 1 command, 2 links (real URLs)
+  - Terminal Commands — 4 commands (git, docker, process management, package manager)
+  - Design Resources — 4 links (real URLs: Tailwind, component libs, design systems, icons)
+
 ## Notes
 
 <!-- Any extra notes -->
+
+- Overwrite the existing `prisma/seed.ts`
+- Reference: @context/features/seed-spec.md
 
 ## History
 
