@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { StatsCards } from '@/components/dashboard/StatsCards';
 import { RecentCollections } from '@/components/dashboard/RecentCollections';
 import { PinnedItems } from '@/components/dashboard/PinnedItems';

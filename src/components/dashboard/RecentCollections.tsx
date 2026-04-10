@@ -1,14 +1,44 @@
-'use client';
-
+import type { ElementType } from 'react';
 import Link from 'next/link';
-import { Star, MoreHorizontal, Code, Sparkles, Terminal, StickyNote, File, Image, Link as LinkIcon } from 'lucide-react';
-import { mockCollections, mockItemTypes } from '@/lib/mock-data';
+import { Star, Code, Sparkles, Terminal, StickyNote, File, Image, Link as LinkIcon } from 'lucide-react';
+import { prisma } from '@/lib/prisma';
+import { getRecentCollections } from '@/lib/db/collections';
+import { CollectionMoreButton } from './CollectionMoreButton';
 
-const ICON_MAP: { [key: string]: React.ElementType } = {
+const ICON_MAP: { [key: string]: ElementType } = {
   Code, Sparkles, Terminal, StickyNote, File, Image, Link: LinkIcon,
 };
 
-export function RecentCollections() {
+const TYPE_BORDER_CLASS: { [name: string]: string } = {
+  snippet: 'bg-blue-500',
+  prompt:  'bg-violet-500',
+  command: 'bg-orange-500',
+  note:    'bg-yellow-300',
+  file:    'bg-gray-400',
+  image:   'bg-pink-500',
+  link:    'bg-emerald-500',
+};
+
+const TYPE_ICON_CLASS: { [name: string]: string } = {
+  snippet: 'text-blue-500',
+  prompt:  'text-violet-500',
+  command: 'text-orange-500',
+  note:    'text-yellow-300',
+  file:    'text-gray-400',
+  image:   'text-pink-500',
+  link:    'text-emerald-500',
+};
+
+export async function RecentCollections() {
+  const user = await prisma.user.findUnique({
+    where: { email: 'demo@devstash.io' },
+    select: { id: true },
+  });
+
+  if (!user) return null;
+
+  const collections = await getRecentCollections(user.id);
+
   return (
     <section>
       <div className="flex items-center justify-between mb-3">
@@ -19,50 +49,49 @@ export function RecentCollections() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {mockCollections.map((col) => (
-          <Link
-            key={col.id}
-            href={`/collections/${col.id}`}
-            className="group relative flex flex-col rounded-lg border border-border bg-card overflow-hidden hover:bg-accent/30 transition-colors"
-          >
-            {/* Colored left border */}
-            <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${col.borderClass}`} />
+        {collections.map((col) => {
+          const borderClass = TYPE_BORDER_CLASS[col.dominantTypeName] ?? 'bg-gray-400';
+          return (
+            <Link
+              key={col.id}
+              href={`/collections/${col.id}`}
+              className="group relative flex flex-col rounded-lg border border-border bg-card overflow-hidden hover:bg-accent/30 transition-colors"
+            >
+              {/* Colored left border derived from most-used item type */}
+              <div className={`absolute left-0 top-0 bottom-0 w-0.5 ${borderClass}`} />
 
-            <div className="pl-4 pr-3 pt-3 pb-3 flex flex-col gap-1">
-              {/* Header */}
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="text-sm font-medium truncate">{col.name}</span>
-                  {col.isFavorite && <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />}
+              <div className="pl-4 pr-3 pt-3 pb-3 flex flex-col gap-1">
+                {/* Header */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="text-sm font-medium truncate">{col.name}</span>
+                    {col.isFavorite && <Star className="h-3 w-3 shrink-0 fill-yellow-400 text-yellow-400" />}
+                  </div>
+                  <CollectionMoreButton />
                 </div>
-                <button
-                  type="button"
-                  aria-label="More options"
-                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity shrink-0"
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </button>
+
+                <p className="text-xs text-muted-foreground">{col.itemCount} items</p>
+
+                {col.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{col.description}</p>
+                )}
+
+                {/* Icons for each distinct item type in this collection */}
+                {col.types.length > 0 && (
+                  <div className="flex items-center gap-1.5 mt-1">
+                    {col.types.map((type) => {
+                      const Icon = ICON_MAP[type.icon];
+                      const iconClass = TYPE_ICON_CLASS[type.name] ?? 'text-gray-400';
+                      return Icon ? (
+                        <Icon key={type.name} className={`h-3.5 w-3.5 ${iconClass}`} />
+                      ) : null;
+                    })}
+                  </div>
+                )}
               </div>
-
-              <p className="text-xs text-muted-foreground">{col.itemCount} items</p>
-
-              {col.description && (
-                <p className="text-xs text-muted-foreground line-clamp-1">{col.description}</p>
-              )}
-
-              {/* Type icons */}
-              <div className="flex items-center gap-1.5 mt-1">
-                {col.typeIds.map((typeId) => {
-                  const type = mockItemTypes.find((t) => t.id === typeId);
-                  if (!type) return null;
-                  const Icon = ICON_MAP[type.icon];
-                  return Icon ? <Icon key={typeId} className={`h-3.5 w-3.5 ${type.textClass}`} /> : null;
-                })}
-              </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
