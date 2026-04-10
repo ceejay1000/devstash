@@ -1,33 +1,27 @@
 import { Package, FolderOpen, Star, Bookmark } from 'lucide-react';
-import { mockItems, mockCollections } from '@/lib/mock-data';
+import { prisma } from '@/lib/prisma';
+import { getDashboardStats } from '@/lib/db/items';
 
-const stats = [
-  {
-    label: 'Items',
-    value: mockItems.length,
-    icon: Package,
-  },
-  {
-    label: 'Collections',
-    value: mockCollections.length,
-    icon: FolderOpen,
-  },
-  {
-    label: 'Favorite Items',
-    value: mockItems.filter((i) => i.isFavorite).length,
-    icon: Star,
-  },
-  {
-    label: 'Favorite Collections',
-    value: mockCollections.filter((c) => c.isFavorite).length,
-    icon: Bookmark,
-  },
-];
+export async function StatsCards() {
+  const user = await prisma.user.findUnique({
+    where: { email: 'demo@devstash.io' },
+    select: { id: true },
+  });
 
-export function StatsCards() {
+  const stats = user
+    ? await getDashboardStats(user.id)
+    : { totalItems: 0, totalCollections: 0, favoriteItems: 0, favoriteCollections: 0 };
+
+  const cards = [
+    { label: 'Items', value: stats.totalItems, icon: Package },
+    { label: 'Collections', value: stats.totalCollections, icon: FolderOpen },
+    { label: 'Favorite Items', value: stats.favoriteItems, icon: Star },
+    { label: 'Favorite Collections', value: stats.favoriteCollections, icon: Bookmark },
+  ];
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {stats.map((stat) => {
+      {cards.map((stat) => {
         const Icon = stat.icon;
         return (
           <div key={stat.label} className="rounded-lg border border-border bg-card p-4">
