@@ -2,7 +2,7 @@
 
 <!-- Feature Name -->
 
-## Dashboard Items — Real Data
+## Stats & Sidebar — Real Data
 
 ## Status
 
@@ -14,20 +14,18 @@ In Progress
 
 <!-- Goals & requirements -->
 
-Replace the dummy item data displayed in the main area of the dashboard (right side) with actual data from the database. This includes both pinned and recent items.
+Show stats in the main area from the database and replace mock data in the sidebar with real data.
 
-- Create `src/lib/db/items.ts` with data fetching functions
-- Fetch items directly in server component
-- Item card icon/border derived from the item type
-- Display item type tags and anything else currently there
-- If there are no pinned items, nothing should display there
-- Update collection stats display
+- Display stats pertaining to database data, keeping the current design/layout
+- Display item types in sidebar with their icons, linking to `/items/[typename]`
+- Add "View all collections" link under the collections list that goes to `/collections`
+- Keep the star icons for favorite collections; for recents, each collection should show a colored circle based on the most-used item type in that collection
 
 ## Notes
 
 <!-- Any extra notes -->
 
-Reference `context/screenshots/dashboard-ui-main.png` if needed — layout and design are already in place.
+Reference `src/lib/db/collections.ts` for the data fetching pattern.
 
 ## History
 
@@ -41,3 +39,4 @@ Reference `context/screenshots/dashboard-ui-main.png` if needed — layout and d
 - **Database setup** — Prisma 7 with Neon PostgreSQL, full schema with NextAuth models, initial migration applied, system item types seeded
 - **Seed data** — Demo user, 5 collections, 15 items (snippets, prompts, commands, links)
 - **Dashboard collections** — RecentCollections converted to async server component, real Prisma queries via `src/lib/db/collections.ts`, border color and type icons derived from most-used item type per collection
+- **Dashboard items** — PinnedItems, RecentItems, and StatsCards converted to async server components, real Prisma queries via `src/lib/db/items.ts`, Lucide icon badges and colored type chips derived from item type

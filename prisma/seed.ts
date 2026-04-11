@@ -62,14 +62,21 @@ async function main() {
   });
   console.log(`  ✓ ${user.email}\n`);
 
+    // ── Cleanup existing demo data ────────────────
+  console.log('→ Cleaning up existing demo data...');
+  await prisma.item.deleteMany({ where: { userId: user.id } });
+  await prisma.collection.deleteMany({ where: { userId: user.id } });
+  console.log('  ✓ Done\n');
+
   // ── Collections ──────────────────────────────
   console.log('→ Seeding collections and items...');
 
-  // React Patterns — 3 snippets
+  // React Patterns — 3 snippets (favorite)
   const reactPatterns = await prisma.collection.create({
     data: {
       name: 'React Patterns',
       description: 'Reusable React patterns and hooks',
+      isFavorite: true,
       userId: user.id,
       defaultTypeId: types['snippet'],
     },
@@ -86,7 +93,7 @@ export function useDebounce<T>(value: T, delay: number): T {
   }, [value, delay]);
 
   return debouncedValue;
-}`, reactPatterns.id);
+}`, reactPatterns.id, { isFavorite: true, isPinned: true });
 
   await createItem(user.id, types['snippet'], 'Context Provider Pattern', 'typescript', `import { createContext, useContext, useState, ReactNode } from 'react';
 
@@ -111,7 +118,7 @@ export function useTheme() {
   const ctx = useContext(ThemeContext);
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
   return ctx;
-}`, reactPatterns.id);
+}`, reactPatterns.id, { isFavorite: true });
 
   await createItem(user.id, types['snippet'], 'Array Utility Functions', 'typescript', `export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]> {
   return arr.reduce((acc, item) => {
@@ -139,11 +146,12 @@ export function unique<T>(arr: T[], key?: keyof T): T[] {
 
   console.log('  ✓ React Patterns (3 snippets)');
 
-  // AI Workflows — 3 prompts
+  // AI Workflows — 3 prompts (favorite)
   const aiWorkflows = await prisma.collection.create({
     data: {
       name: 'AI Workflows',
       description: 'AI prompts and workflow automations',
+      isFavorite: true,
       userId: user.id,
       defaultTypeId: types['prompt'],
     },
@@ -160,7 +168,7 @@ export function unique<T>(arr: T[], key?: keyof T): T[] {
 For each issue found, explain the problem and suggest a specific fix. Be direct and concise.
 
 Code to review:
-[PASTE CODE HERE]`, aiWorkflows.id);
+[PASTE CODE HERE]`, aiWorkflows.id, { isFavorite: true, isPinned: true });
 
   await createItem(user.id, types['prompt'], 'Documentation Generation', null, `Generate comprehensive documentation for the following code. Include:
 
@@ -173,7 +181,7 @@ Code to review:
 Format as clean Markdown. Keep explanations concise and developer-focused.
 
 Code:
-[PASTE CODE HERE]`, aiWorkflows.id);
+[PASTE CODE HERE]`, aiWorkflows.id, { isFavorite: true });
 
   await createItem(user.id, types['prompt'], 'Refactoring Assistance', null, `Refactor the following code to improve its quality. Focus on:
 
@@ -243,7 +251,7 @@ CMD ["node", "server.js"]`, devops.id);
     },
   });
 
-  await createItem(user.id, types['command'], 'Undo Last Commit (keep changes)', 'bash', `git reset --soft HEAD~1`, terminalCommands.id);
+  await createItem(user.id, types['command'], 'Undo Last Commit (keep changes)', 'bash', `git reset --soft HEAD~1`, terminalCommands.id, { isFavorite: true, isPinned: true });
   await createItem(user.id, types['command'], 'Docker System Prune', 'bash', `docker system prune -af`, terminalCommands.id);
   await createItem(user.id, types['command'], 'Kill Process on Port', 'bash', `lsof -ti:3000 | xargs kill -9`, terminalCommands.id);
   await createItem(user.id, types['command'], 'Clean npm Install', 'bash', `rm -rf node_modules package-lock.json && npm install`, terminalCommands.id);
@@ -260,7 +268,7 @@ CMD ["node", "server.js"]`, devops.id);
     },
   });
 
-  await createLink(user.id, types['link'], 'Tailwind CSS Docs', 'https://tailwindcss.com/docs', 'Utility-first CSS framework documentation', designResources.id);
+  await createLink(user.id, types['link'], 'Tailwind CSS Docs', 'https://tailwindcss.com/docs', 'Utility-first CSS framework documentation', designResources.id, { isFavorite: true });
   await createLink(user.id, types['link'], 'shadcn/ui', 'https://ui.shadcn.com', 'Beautifully designed accessible component library', designResources.id);
   await createLink(user.id, types['link'], 'Radix UI', 'https://www.radix-ui.com', 'Unstyled, accessible UI component primitives', designResources.id);
   await createLink(user.id, types['link'], 'Lucide Icons', 'https://lucide.dev', 'Beautiful and consistent open-source icon library', designResources.id);
@@ -280,6 +288,7 @@ async function createItem(
   language: string | null,
   content: string,
   collectionId: string,
+  opts: { isFavorite?: boolean; isPinned?: boolean } = {},
 ) {
   return prisma.item.create({
     data: {
@@ -289,6 +298,8 @@ async function createItem(
       language,
       userId,
       itemTypeId,
+      isFavorite: opts.isFavorite ?? false,
+      isPinned: opts.isPinned ?? false,
       collections: { create: { collectionId } },
     },
   });
@@ -301,6 +312,7 @@ async function createLink(
   url: string,
   description: string,
   collectionId: string,
+  opts: { isFavorite?: boolean } = {},
 ) {
   return prisma.item.create({
     data: {
@@ -310,6 +322,7 @@ async function createLink(
       description,
       userId,
       itemTypeId,
+      isFavorite: opts.isFavorite ?? false,
       collections: { create: { collectionId } },
     },
   });

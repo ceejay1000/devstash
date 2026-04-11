@@ -1,5 +1,12 @@
 import { prisma } from '@/lib/prisma';
 
+export type SidebarCollection = {
+  id: string;
+  name: string;
+  isFavorite: boolean;
+  dominantTypeName: string;
+};
+
 export type CollectionCard = {
   id: string;
   name: string;
@@ -9,6 +16,48 @@ export type CollectionCard = {
   dominantTypeName: string;
   types: { name: string; icon: string }[];
 };
+
+export async function getSidebarCollections(userId: string): Promise<SidebarCollection[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    orderBy: [{ isFavorite: 'desc' }, { updatedAt: 'desc' }],
+    include: {
+      defaultType: { select: { name: true } },
+      items: {
+        include: {
+          item: {
+            include: {
+              itemType: { select: { id: true, name: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return collections.map((col) => {
+    const typeMap: { [id: string]: { count: number; name: string } } = {};
+    for (const ic of col.items) {
+      const t = ic.item.itemType;
+      if (!typeMap[t.id]) typeMap[t.id] = { count: 0, name: t.name };
+      typeMap[t.id].count++;
+    }
+
+    const typeEntries = Object.values(typeMap);
+    let dominantTypeName = col.defaultType?.name ?? 'file';
+    if (typeEntries.length > 0) {
+      const dominant = typeEntries.reduce((a, b) => (a.count >= b.count ? a : b));
+      dominantTypeName = dominant.name;
+    }
+
+    return {
+      id: col.id,
+      name: col.name,
+      isFavorite: col.isFavorite,
+      dominantTypeName,
+    };
+  });
+}
 
 export async function getRecentCollections(userId: string): Promise<CollectionCard[]> {
   const collections = await prisma.collection.findMany({

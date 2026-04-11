@@ -15,10 +15,12 @@ import {
   Star,
   Settings,
 } from 'lucide-react';
+import type { ElementType } from 'react';
 import { Button } from '@/components/ui/button';
-import { mockUser, mockItemTypes, mockCollections } from '@/lib/mock-data';
+import type { SidebarType } from '@/lib/db/items';
+import type { SidebarCollection } from '@/lib/db/collections';
 
-const ICON_MAP: { [key: string]: React.ElementType } = {
+const ICON_MAP: { [key: string]: ElementType } = {
   Code,
   Sparkles,
   Terminal,
@@ -28,22 +30,47 @@ const ICON_MAP: { [key: string]: React.ElementType } = {
   Link: LinkIcon,
 };
 
-const favoriteCollections = mockCollections.filter((c) => c.isFavorite);
-const allCollections = mockCollections.filter((c) => !c.isFavorite);
+const TYPE_ICON_CLASS: { [key: string]: string } = {
+  snippet: 'text-blue-500',
+  prompt:  'text-violet-500',
+  command: 'text-orange-500',
+  note:    'text-yellow-300',
+  file:    'text-gray-400',
+  image:   'text-pink-500',
+  link:    'text-emerald-500',
+};
+
+const TYPE_DOT_CLASS: { [key: string]: string } = {
+  snippet: 'bg-blue-500',
+  prompt:  'bg-violet-500',
+  command: 'bg-orange-500',
+  note:    'bg-yellow-300',
+  file:    'bg-gray-400',
+  image:   'bg-pink-500',
+  link:    'bg-emerald-500',
+};
+
+export type SidebarUser = { name: string; email: string };
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  types: SidebarType[];
+  collections: SidebarCollection[];
+  user: SidebarUser | null;
 }
 
-export function Sidebar({ isOpen, onClose }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, types, collections, user }: SidebarProps) {
   const [typesOpen, setTypesOpen] = useState(true);
   const [collectionsOpen, setCollectionsOpen] = useState(true);
 
-  const userInitials = mockUser.name
+  const favoriteCollections = collections.filter((c) => c.isFavorite);
+  const recentCollections = collections.filter((c) => !c.isFavorite);
+
+  const userInitials = user?.name
     .split(' ')
     .map((n) => n[0])
-    .join('');
+    .join('') ?? '?';
 
   return (
     <>
@@ -88,19 +115,18 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {typesOpen && (
               <ul className="mt-0.5">
-                {mockItemTypes.map((type) => {
+                {types.map((type) => {
                   const Icon = ICON_MAP[type.icon];
+                  const iconClass = TYPE_ICON_CLASS[type.name] ?? 'text-gray-400';
                   return (
                     <li key={type.id}>
                       <Link
                         href={`/items/${type.name}s`}
                         className="flex items-center gap-2.5 px-3 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
                       >
-                        {Icon && (
-                          <Icon className={`h-3.5 w-3.5 shrink-0 ${type.textClass}`} />
-                        )}
+                        {Icon && <Icon className={`h-3.5 w-3.5 shrink-0 ${iconClass}`} />}
                         <span className="flex-1 capitalize">{type.name}s</span>
-                        <span className="text-xs text-muted-foreground">{type.count}</span>
+                        <span className="text-xs text-muted-foreground">{type.itemCount}</span>
                       </Link>
                     </li>
                   );
@@ -147,27 +173,38 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   </div>
                 )}
 
-                {/* All collections */}
-                {allCollections.length > 0 && (
+                {/* Recents */}
+                {recentCollections.length > 0 && (
                   <div>
                     <p className="px-3 py-1 text-xs text-muted-foreground/60 uppercase tracking-wider">
-                      All Collections
+                      Recents
                     </p>
                     <ul>
-                      {allCollections.map((col) => (
-                        <li key={col.id}>
-                          <Link
-                            href={`/collections/${col.id}`}
-                            className="flex items-center gap-2 px-3 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-                          >
-                            <span className="flex-1 truncate">{col.name}</span>
-                            <span className="text-xs text-muted-foreground shrink-0">{col.itemCount}</span>
-                          </Link>
-                        </li>
-                      ))}
+                      {recentCollections.map((col) => {
+                        const dotClass = TYPE_DOT_CLASS[col.dominantTypeName] ?? 'bg-gray-400';
+                        return (
+                          <li key={col.id}>
+                            <Link
+                              href={`/collections/${col.id}`}
+                              className="flex items-center gap-2 px-3 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                            >
+                              <span className={`h-2 w-2 rounded-full shrink-0 ${dotClass}`} />
+                              <span className="flex-1 truncate">{col.name}</span>
+                            </Link>
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 )}
+
+                {/* View all link */}
+                <Link
+                  href="/collections"
+                  className="block px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  View all collections →
+                </Link>
               </div>
             )}
           </div>
@@ -180,8 +217,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               {userInitials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate leading-none">{mockUser.name}</p>
-              <p className="text-xs text-muted-foreground truncate mt-0.5">{mockUser.email}</p>
+              <p className="text-sm font-medium truncate leading-none">{user?.name ?? '—'}</p>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">{user?.email ?? '—'}</p>
             </div>
             <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0 text-muted-foreground">
               <Settings className="h-3.5 w-3.5" />

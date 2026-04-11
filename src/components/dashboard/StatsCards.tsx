@@ -1,12 +1,9 @@
 import { Package, FolderOpen, Star, Bookmark } from 'lucide-react';
-import { prisma } from '@/lib/prisma';
+import { getDemoUser } from '@/lib/db/user';
 import { getDashboardStats } from '@/lib/db/items';
 
 export async function StatsCards() {
-  const user = await prisma.user.findUnique({
-    where: { email: 'demo@devstash.io' },
-    select: { id: true },
-  });
+  const user = await getDemoUser();
 
   const stats = user
     ? await getDashboardStats(user.id)

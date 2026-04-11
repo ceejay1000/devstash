@@ -1,5 +1,35 @@
 import { prisma } from '@/lib/prisma';
 
+export type SidebarType = {
+  id: string;
+  name: string;
+  icon: string;
+  itemCount: number;
+};
+
+const TYPE_ORDER = ['snippet', 'prompt', 'command', 'note', 'file', 'image', 'link'];
+
+export async function getSidebarTypes(userId: string): Promise<SidebarType[]> {
+  const types = await prisma.itemType.findMany({
+    where: { isSystem: true, userId: null },
+    include: {
+      items: {
+        where: { userId },
+        select: { id: true },
+      },
+    },
+  });
+
+  return types
+    .sort((a, b) => TYPE_ORDER.indexOf(a.name) - TYPE_ORDER.indexOf(b.name))
+    .map((t) => ({
+      id: t.id,
+      name: t.name,
+      icon: t.icon,
+      itemCount: t.items.length,
+    }));
+}
+
 export type ItemCard = {
   id: string;
   title: string;

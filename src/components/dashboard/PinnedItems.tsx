@@ -1,6 +1,6 @@
 import type { ElementType } from 'react';
 import { Pin, Star, Code, Sparkles, Terminal, StickyNote, File, Image, Link as LinkIcon } from 'lucide-react';
-import { prisma } from '@/lib/prisma';
+import { getDemoUser } from '@/lib/db/user';
 import { getPinnedItems } from '@/lib/db/items';
 
 const ICON_MAP: { [key: string]: ElementType } = {
@@ -44,10 +44,7 @@ function formatDate(date: Date) {
 }
 
 export async function PinnedItems() {
-  const user = await prisma.user.findUnique({
-    where: { email: 'demo@devstash.io' },
-    select: { id: true },
-  });
+  const user = await getDemoUser();
 
   if (!user) return null;
 
